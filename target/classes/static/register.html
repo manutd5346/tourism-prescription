@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>환자 등록 - 사회적 관광 처방 시스템</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;background:#F4F6F9;color:#1a1a1a;font-size:14px}
+
+.top-bar{background:#fff;border-bottom:1px solid #E8EBF0;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;background:#1D9E75;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px}
+.logo-name{font-size:14px;font-weight:600;color:#1a1a1a}
+.logo-sub{font-size:11px;color:#888;margin-left:4px}
+.top-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#3C3489;border:1px solid #AFA9EC}
+
+.page{max-width:680px;margin:0 auto;padding:1.5rem}
+
+.pr-card{background:#fff;border:1px solid #E8EBF0;border-radius:12px;padding:1.25rem}
+.pr-section-label{font-size:11px;font-weight:600;color:#888;letter-spacing:.05em;margin:0 0 12px;display:flex;align-items:center;gap:6px}
+.pr-dot{width:5px;height:5px;border-radius:50%;background:#1D9E75;display:inline-block}
+
+.pr-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.pr-field label{display:block;font-size:11px;color:#888;margin-bottom:4px}
+.pr-field input,.pr-field select{font-size:13px;width:100%;padding:7px 10px;border:1px solid #E0E4EA;border-radius:8px;background:#F8FAF9;color:#1a1a1a;outline:none;font-family:inherit}
+.pr-field input:focus,.pr-field select:focus{border-color:#1D9E75;background:#fff;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+.pr-field input[readonly]{color:#888;cursor:default}
+
+.pr-tag-row{display:flex;gap:5px;flex-wrap:wrap}
+.pr-tag{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid #E8EBF0;background:#F8FAF9;color:#888;cursor:pointer;transition:all .12s}
+.pr-tag.on{background:#E1F5EE;border-color:#5DCAA5;color:#085041}
+
+.pr-summary{background:#F8FAF9;border-radius:8px;padding:12px 14px;margin-top:14px;border:1px solid #EEF1F5}
+.pr-srow{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.pr-srow+.pr-srow{border-top:1px solid #EEF1F5}
+.pr-sk{font-size:11px;color:#888}
+.pr-sv{font-size:12px;font-weight:600;color:#1a1a1a}
+.pr-sv-teal{color:#0F6E56}
+
+.pr-btn-row{display:flex;gap:8px;margin-top:14px}
+.pr-btn-reset{flex:1;padding:10px;border:1px solid #E0E4EA;border-radius:8px;font-size:13px;background:#F8FAF9;color:#555;cursor:pointer;font-family:inherit;transition:all .12s}
+.pr-btn-reset:hover{background:#fff}
+.pr-btn-submit{flex:2;padding:10px;border:none;border-radius:8px;font-size:13px;font-weight:600;background:#1D9E75;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s}
+.pr-btn-submit:hover{background:#0F6E56}
+.pr-btn-submit:active{transform:scale(.98)}
+.pr-btn-submit:disabled{background:#ccc;cursor:not-allowed}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:#A32D2D}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:200}
+.modal-backdrop.show{display:flex}
+.modal{background:#fff;border-radius:14px;padding:2rem;width:320px;text-align:center}
+.modal-icon{width:52px;height:52px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.modal-icon svg{width:26px;height:26px}
+.modal-title{font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#888;margin-bottom:16px}
+.modal-no{font-family:monospace;font-size:14px;font-weight:600;color:#0F6E56;background:#E1F5EE;padding:8px 16px;border-radius:8px;margin-bottom:18px}
+.modal-btn{width:100%;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:600;background:#1D9E75;color:#fff;cursor:pointer}
+
+.nav-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#888;text-decoration:none;margin-bottom:14px}
+.nav-link:hover{color:#1D9E75}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5C8 1.5 4 5 4 9a4 4 0 008 0c0-4-4-7.5-4-7.5z" fill="white" opacity=".9"/><circle cx="8" cy="9" r="1.5" fill="#1D9E75"/></svg>
+    </div>
+    <span class="logo-name">사회적 관광 처방 시스템</span>
+    <span class="logo-sub">Korea Tourism Organization</span>
+  </div>
+  <span class="top-badge">환자 등록 모드</span>
+</div>
+
+<div class="page">
+
+  <a class="nav-link" href="/index.html">← 처방 발행 화면으로</a>
+
+  <div class="pr-card">
+    <div class="pr-section-label"><span class="pr-dot"></span>인적 정보</div>
+    <div class="pr-form-row">
+      <div class="pr-field"><label>이름 *</label><input type="text" id="name" placeholder="홍길동"/></div>
+      <div class="pr-field"><label>생년월일 *</label><input type="date" id="birthDate"/></div>
+    </div>
+    <div class="pr-form-row">
+      <div class="pr-field"><label>연락처</label><input type="tel" id="phone" placeholder="010-0000-0000"/></div>
+      <div class="pr-field"><label>보호자 이름</label><input type="text" id="guardianName" placeholder="홍영희"/></div>
+    </div>
+    <div class="pr-form-row">
+      <div class="pr-field">
+        <label>거주 지역 *</label>
+        <select id="areaCode" onchange="onAreaChange()">
+          <option value="">선택</option>
+          <option value="1">서울</option>
+          <option value="2">인천</option>
+          <option value="3">대전</option>
+          <option value="4">대구</option>
+          <option value="5">광주</option>
+          <option value="6">부산</option>
+          <option value="7">울산</option>
+          <option value="31">경기</option>
+          <option value="32" selected>강원</option>
+          <option value="33">충북</option>
+          <option value="34">충남</option>
+          <option value="35">경북</option>
+          <option value="36">경남</option>
+          <option value="37">전북</option>
+          <option value="38">전남</option>
+          <option value="39">제주</option>
+        </select>
+      </div>
+      <div class="pr-field"><label>상세 주소</label><input type="text" id="areaDetail" placeholder="원주시" value="원주시"/></div>
+    </div>
+
+    <div class="pr-section-label" style="margin-top:18px"><span class="pr-dot"></span>대상 구분</div>
+    <div class="pr-tag-row" id="target-tags" style="margin-bottom:18px">
+      <div class="pr-tag" onclick="toggleTag(this)">저소득층</div>
+      <div class="pr-tag" onclick="toggleTag(this)">장애인</div>
+      <div class="pr-tag" onclick="toggleTag(this)">노인</div>
+      <div class="pr-tag" onclick="toggleTag(this)">한부모가족</div>
+      <div class="pr-tag" onclick="toggleTag(this)">다문화가족</div>
+      <div class="pr-tag" onclick="toggleTag(this)">북한이탈주민</div>
+      <div class="pr-tag" onclick="toggleTag(this)">청소년</div>
+    </div>
+
+    <div class="pr-section-label"><span class="pr-dot"></span>진단 정보</div>
+    <div class="pr-form-row">
+      <div class="pr-field">
+        <label>주진단 코드 (ICD-10)</label>
+        <select id="diagnosisCode" onchange="onDiagnosisChange()">
+          <option value="">선택</option>
+          <option value="F32.2">F32.2 - 중증 우울 삽화</option>
+          <option value="F41.1">F41.1 - 범불안장애</option>
+          <option value="F43.1">F43.1 - 외상후 스트레스장애</option>
+          <option value="Z60.2">Z60.2 - 사회적 고립 문제</option>
+          <option value="F33.1">F33.1 - 재발성 우울장애</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="pr-field"><label>주진단명</label><input type="text" id="diagnosisName" placeholder="자동 입력됨" readonly/></div>
+    </div>
+
+    <div class="pr-summary">
+      <div class="pr-srow"><span class="pr-sk">등록 예정 번호</span><span class="pr-sv" style="font-family:monospace;font-size:11px">P-<span id="s-date">--------</span>-<span id="s-seq">----</span></span></div>
+      <div class="pr-srow"><span class="pr-sk">이름</span><span class="pr-sv pr-sv-teal" id="s-name">미입력</span></div>
+      <div class="pr-srow"><span class="pr-sk">거주지</span><span class="pr-sv" id="s-area">강원 원주시</span></div>
+      <div class="pr-srow"><span class="pr-sk">대상 구분</span><span class="pr-sv" id="s-target">미선택</span></div>
+      <div class="pr-srow"><span class="pr-sk">주진단</span><span class="pr-sv" id="s-diag">미선택</span></div>
+    </div>
+
+    <div class="pr-btn-row">
+      <button class="pr-btn-reset" onclick="resetForm()">초기화</button>
+      <button class="pr-btn-submit" id="submit-btn" onclick="registerPatient()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        환자 등록
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg viewBox="0 0 28 28" fill="none"><path d="M5 14l7 7L23 7" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="modal-title">환자 등록 완료</div>
+    <div class="modal-sub" id="modal-sub">환자 정보가 정상 등록되었습니다.</div>
+    <div class="modal-no" id="modal-no">P-00000000-0000</div>
+    <button class="modal-btn" onclick="closeModal()">확인</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var AREA_NAMES = {"1":"서울","2":"인천","3":"대전","4":"대구","5":"광주","6":"부산","7":"울산","31":"경기","32":"강원","33":"충북","34":"충남","35":"경북","36":"경남","37":"전북","38":"전남","39":"제주"};
+var DIAG_NAMES = {"F32.2":"중증 우울 삽화","F41.1":"범불안장애","F43.1":"외상후 스트레스장애","Z60.2":"사회적 고립 문제","F33.1":"재발성 우울장애","기타":"기타"};
+
+function pad(n,len){ n=String(n); while(n.length<len) n='0'+n; return n; }
+var today = new Date();
+var dateStr = today.getFullYear() + pad(today.getMonth()+1,2) + pad(today.getDate(),2);
+var seq = pad(Math.floor(Math.random()*9000)+1000,4);
+document.getElementById('s-date').textContent = dateStr;
+document.getElementById('s-seq').textContent = seq;
+
+document.getElementById('name').addEventListener('input', function(){
+  document.getElementById('s-name').textContent = this.value || '미입력';
+});
+
+function onAreaChange(){
+  var code = document.getElementById('areaCode').value;
+  var name = AREA_NAMES[code] || '미선택';
+  var detail = document.getElementById('areaDetail').value;
+  document.getElementById('s-area').textContent = name + (detail ? ' ' + detail : '');
+}
+document.getElementById('areaDetail').addEventListener('input', onAreaChange);
+
+function onDiagnosisChange(){
+  var code = document.getElementById('diagnosisCode').value;
+  var name = DIAG_NAMES[code] || '';
+  document.getElementById('diagnosisName').value = name;
+  document.getElementById('s-diag').textContent = code ? (code + ' ' + name) : '미선택';
+}
+
+function toggleTag(el){
+  el.classList.toggle('on');
+  var selected = [];
+  document.querySelectorAll('#target-tags .pr-tag.on').forEach(function(t){ selected.push(t.textContent); });
+  document.getElementById('s-target').textContent = selected.length ? selected.join(', ') : '미선택';
+}
+
+function showToast(msg, type){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+function resetForm(){
+  document.getElementById('name').value='';
+  document.getElementById('birthDate').value='';
+  document.getElementById('phone').value='';
+  document.getElementById('guardianName').value='';
+  document.getElementById('areaCode').value='32';
+  document.getElementById('areaDetail').value='원주시';
+  document.getElementById('diagnosisCode').value='';
+  document.getElementById('diagnosisName').value='';
+  document.querySelectorAll('#target-tags .pr-tag').forEach(function(t){ t.classList.remove('on'); });
+  document.getElementById('s-name').textContent='미입력';
+  document.getElementById('s-target').textContent='미선택';
+  document.getElementById('s-diag').textContent='미선택';
+  onAreaChange();
+}
+
+async function registerPatient(){
+  var name = document.getElementById('name').value.trim();
+  var birthDate = document.getElementById('birthDate').value;
+  var areaCode = document.getElementById('areaCode').value;
+
+  if (!name){ showToast('이름을 입력해주세요.', 'error'); return; }
+  if (!birthDate){ showToast('생년월일을 입력해주세요.', 'error'); return; }
+  if (!areaCode){ showToast('거주 지역을 선택해주세요.', 'error'); return; }
+
+  var targetTypes = [];
+  document.querySelectorAll('#target-tags .pr-tag.on').forEach(function(t){ targetTypes.push(t.textContent); });
+
+  var areaName = AREA_NAMES[areaCode];
+  var detail = document.getElementById('areaDetail').value;
+
+  var body = {
+    name: name,
+    birthDate: birthDate,
+    phone: document.getElementById('phone').value,
+    areaCode: areaCode,
+    areaName: areaName + (detail ? ' ' + detail : ''),
+    targetType: targetTypes.join(','),
+    guardianName: document.getElementById('guardianName').value,
+    diagnosisCode: document.getElementById('diagnosisCode').value,
+    diagnosisName: document.getElementById('diagnosisName').value
+  };
+
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '등록 중...';
+
+  try {
+    var res = await fetch('/api/patient/register', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+
+    if (data.success){
+      document.getElementById('modal-sub').textContent = data.patient.name + ' 환자가 정상 등록되었습니다.';
+      document.getElementById('modal-no').textContent = data.patient.patientNo;
+      document.getElementById('modal').classList.add('show');
+    } else {
+      showToast('등록 실패: ' + (data.message || '오류 발생'), 'error');
+    }
+  } catch(e){
+    showToast('서버 연결 오류가 발생했습니다.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg> 환자 등록';
+  }
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('show');
+  resetForm();
+}
+
+onAreaChange();
+</script>
+</body>
+</html>

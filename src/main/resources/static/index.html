@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>사회적 관광 처방 시스템</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;background:#F4F6F9;color:#1a1a1a;font-size:14px}
+.top-bar{background:#fff;border-bottom:1px solid #E8EBF0;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;background:#1D9E75;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px}
+.logo-name{font-size:14px;font-weight:600;color:#1a1a1a}
+.logo-sub{font-size:11px;color:#888;margin-left:4px}
+.top-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+.layout{display:grid;grid-template-columns:300px 1fr;gap:0;min-height:calc(100vh - 56px)}
+.left-panel{background:#fff;border-right:1px solid #E8EBF0;padding:1.25rem;overflow-y:auto}
+.panel-title{font-size:11px;font-weight:600;color:#888;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.dot{width:5px;height:5px;border-radius:50%;display:inline-block}
+.dot-green{background:#1D9E75}
+.dot-red{background:#E24B4A}
+.patient-card{background:#F8FAF9;border:1px solid #E1F5EE;border-radius:10px;padding:1rem;margin-bottom:12px}
+.patient-avatar{width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#085041;margin-bottom:10px}
+.patient-name{font-size:16px;font-weight:600;color:#1a1a1a}
+.patient-meta{font-size:11px;color:#888;margin-top:2px}
+.badge-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid}
+.badge-red{background:#FCEBEB;color:#791F1F;border-color:#F09595}
+.badge-purple{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.badge-amber{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.badge-teal{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.info-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #EEF1F5;font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:#888}
+.info-val{color:#1a1a1a;font-weight:500}
+.disease-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #EEF1F5}
+.disease-item:last-child{border-bottom:none}
+.icd{font-family:monospace;font-size:10px;background:#FCEBEB;color:#791F1F;border:1px solid #F09595;border-radius:4px;padding:2px 6px;flex-shrink:0;line-height:1.8}
+.disease-name{font-size:12px;font-weight:500;color:#1a1a1a}
+.disease-date{font-size:10px;color:#888}
+.status-tag{font-size:10px;padding:2px 7px;border-radius:20px;margin-left:auto;flex-shrink:0}
+.tag-active{background:#FCEBEB;color:#791F1F;border:1px solid #F09595}
+.tag-obs{background:#FAEEDA;color:#633806;border:1px solid #EF9F27}
+.score-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px}
+.score-box{background:#F8FAF9;border-radius:8px;padding:8px;text-align:center}
+.score-label{font-size:10px;color:#888;margin-bottom:3px}
+.score-val{font-size:18px;font-weight:600}
+.score-danger{color:#A32D2D}
+.score-warn{color:#854F0B}
+.right-panel{padding:1.5rem;overflow-y:auto}
+.section-card{background:#fff;border:1px solid #E8EBF0;border-radius:12px;padding:1.25rem;margin-bottom:14px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-label{font-size:11px;font-weight:600;color:#888;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.rx-no{font-family:monospace;font-size:11px;color:#aaa}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.field label{display:block;font-size:11px;color:#888;margin-bottom:4px}
+.field input,.field select,.field textarea{font-size:13px;width:100%;padding:7px 10px;border:1px solid #E0E4EA;border-radius:8px;background:#F8FAF9;color:#1a1a1a;outline:none;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#1D9E75;background:#fff;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+.field textarea{resize:none;height:60px;line-height:1.5}
+.field input[readonly]{color:#888;cursor:default}
+.program-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.program-card{border:1.5px solid #E8EBF0;border-radius:10px;padding:10px;cursor:pointer;transition:all .15s;position:relative;text-align:left}
+.program-card:hover{border-color:#1D9E75}
+.program-card.active{border-color:#1D9E75;background:#F2FBF7}
+.program-icon{font-size:18px;margin-bottom:4px}
+.program-name{font-size:12px;font-weight:600;color:#1a1a1a}
+.program-sub{font-size:10px;color:#999;margin-top:1px}
+.program-src{position:absolute;top:8px;right:8px;font-size:9px;padding:1px 6px;border-radius:10px;background:#EEF1F5;color:#888}
+.place-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.place-card{border:1px solid #E8EBF0;border-radius:10px;overflow:hidden;cursor:pointer;transition:all .15s;position:relative}
+.place-card:hover{border-color:#1D9E75;transform:translateY(-1px)}
+.place-card.selected{border-color:#1D9E75;box-shadow:0 0 0 2px rgba(29,158,117,.2)}
+.place-img{width:100%;height:78px;object-fit:cover;background:#E8EBF0;display:block}
+.place-img-ph{width:100%;height:78px;background:linear-gradient(135deg,#E1F5EE,#B8E8D4);display:flex;align-items:center;justify-content:center;font-size:22px}
+.place-info{padding:8px}
+.place-name{font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.place-addr{font-size:10px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.place-meta{font-size:9px;color:#1D9E75;margin-top:2px;font-weight:500}
+.selected-mark{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:#1D9E75;display:none;align-items:center;justify-content:center}
+.place-card.selected .selected-mark{display:flex}
+.selected-mark svg{width:10px;height:10px}
+.loading-text{text-align:center;color:#888;font-size:12px;padding:20px;grid-column:1/-1}
+.error-text{text-align:center;color:#E24B4A;font-size:12px;padding:20px;grid-column:1/-1}
+.period-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.ptab{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid #E8EBF0;background:#F8FAF9;color:#888;cursor:pointer;transition:all .12s}
+.ptab.on{background:#1D9E75;border-color:#1D9E75;color:#fff;font-weight:500}
+.tag-row{display:flex;gap:5px;flex-wrap:wrap}
+.stag{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid #E8EBF0;background:#F8FAF9;color:#888;cursor:pointer;transition:all .12s}
+.stag.on{background:#E1F5EE;border-color:#5DCAA5;color:#085041}
+.summary{background:#F8FAF9;border-radius:8px;padding:12px 14px;margin-top:12px;border:1px solid #EEF1F5}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.srow+.srow{border-top:1px solid #EEF1F5}
+.sk{font-size:11px;color:#888}
+.sv{font-size:12px;font-weight:600;color:#1a1a1a}
+.sv-teal{color:#0F6E56}
+.sv-red{color:#A32D2D}
+.btn-row{display:flex;gap:8px;margin-top:14px}
+.btn-draft{flex:1;padding:10px;border:1px solid #E0E4EA;border-radius:8px;font-size:13px;background:#F8FAF9;color:#555;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-draft:hover{background:#fff}
+.btn-issue{flex:2;padding:10px;border:none;border-radius:8px;font-size:13px;font-weight:600;background:#1D9E75;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s}
+.btn-issue:hover{background:#0F6E56}
+.btn-issue:active{transform:scale(.98)}
+.btn-issue:disabled{background:#ccc;cursor:not-allowed}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:#A32D2D}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:200}
+.modal-backdrop.show{display:flex}
+.modal{background:#fff;border-radius:14px;padding:2rem;width:360px;text-align:center}
+.modal-icon{width:56px;height:56px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.modal-icon svg{width:28px;height:28px}
+.modal-title{font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#888;margin-bottom:20px}
+.modal-rxno{font-family:monospace;font-size:14px;font-weight:600;color:#0F6E56;background:#E1F5EE;padding:8px 16px;border-radius:8px;margin-bottom:20px}
+.modal-btn{width:100%;padding:11px;border:none;border-radius:8px;font-size:14px;font-weight:600;background:#1D9E75;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5C8 1.5 4 5 4 9a4 4 0 008 0c0-4-4-7.5-4-7.5z" fill="white" opacity=".9"/><circle cx="8" cy="9" r="1.5" fill="#1D9E75"/></svg></div>
+    <span class="logo-name">사회적 관광 처방 시스템</span>
+    <span class="logo-sub">Korea Tourism Organization</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="/register.html" style="font-size:12px;color:#888;text-decoration:none;padding:5px 10px;border-radius:6px">환자 등록</a>
+    <a href="/prescription.html" style="font-size:12px;color:#888;text-decoration:none;padding:5px 10px;border-radius:6px">처방 이력</a>
+    <span class="top-badge">처방 발행 모드</span>
+  </div>
+</div>
+<div class="layout">
+  <div class="left-panel">
+    <div class="panel-title"><span class="dot dot-green"></span>환자 선택</div>
+    <select id="patient-select" onchange="onPatientChange()" style="width:100%;font-size:13px;padding:8px 10px;border:1px solid #E0E4EA;border-radius:8px;background:#F8FAF9;color:#1a1a1a;outline:none;margin-bottom:16px">
+      <option value="">불러오는 중...</option>
+    </select>
+
+    <div class="panel-title"><span class="dot dot-green"></span>환자 기본 정보</div>
+    <div class="patient-card">
+      <div class="patient-avatar" id="pt-avatar">-</div>
+      <div class="patient-name" id="pt-name">선택된 환자 없음</div>
+      <div class="patient-meta" id="pt-meta">-</div>
+      <div class="badge-row" id="pt-badges"></div>
+    </div>
+    <div class="panel-title"><span class="dot dot-green"></span>연락 정보</div>
+    <div style="background:#F8FAF9;border-radius:10px;padding:.75rem 1rem;margin-bottom:12px">
+      <div class="info-row"><span class="info-key">연락처</span><span class="info-val" id="pt-phone">-</span></div>
+      <div class="info-row"><span class="info-key">거주지</span><span class="info-val" id="pt-area">-</span></div>
+      <div class="info-row"><span class="info-key">보호자</span><span class="info-val" id="pt-guardian">-</span></div>
+    </div>
+    <div class="panel-title"><span class="dot dot-red"></span>상병 이력</div>
+    <div style="background:#F8FAF9;border-radius:10px;padding:.75rem 1rem;margin-bottom:12px" id="pt-diseases">
+      <div style="font-size:11px;color:#aaa;text-align:center;padding:8px 0">등록된 상병 이력이 없습니다.</div>
+    </div>
+    <div class="panel-title"><span class="dot dot-red"></span>임상 평가 점수</div>
+    <div class="score-grid" id="pt-scores">
+      <div style="font-size:11px;color:#aaa;text-align:center;padding:8px 0;grid-column:1/-1">등록된 평가 점수가 없습니다.</div>
+    </div>
+  </div>
+  <div class="right-panel">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-label"><span class="dot dot-green"></span>처방 발행 정보</div>
+        <div class="rx-no">RX-<span id="rx-year">2026</span>-<span id="rx-seq">------</span></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>처방 의사</label><input type="text" id="doctorName" value="박정신 (정신건강의학과)" readonly/></div>
+        <div class="field"><label>처방 기관</label><input type="text" id="hospitalName" value="A병원"/></div>
+      </div>
+      <div class="field"><label>처방 목적 및 임상 소견</label><textarea id="clinicalNote">중증 우울 삽화 및 사회적 고립으로 인해 자연 환경 노출 및 사회적 교류를 통한 정서 회복 목적의 관광 처방을 시행함.</textarea></div>
+    </div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-label"><span class="dot dot-green"></span>관광 프로그램 선택</div>
+        <select id="area-filter" onchange="loadCurrentProgram()">
+          <option value="">전국</option>
+          <option value="1">서울</option>
+          <option value="2">인천</option>
+          <option value="3">대전</option>
+          <option value="4">대구</option>
+          <option value="5">광주</option>
+          <option value="6">부산</option>
+          <option value="7">울산</option>
+          <option value="31">경기</option>
+          <option value="32" selected>강원</option>
+          <option value="33">충북</option>
+          <option value="34">충남</option>
+          <option value="35">경북</option>
+          <option value="36">경남</option>
+          <option value="37">전북</option>
+          <option value="38">전남</option>
+          <option value="39">제주</option>
+        </select>
+      </div>
+      <div class="program-grid" id="program-grid"></div>
+      <div class="place-grid" id="place-grid"><div class="loading-text">프로그램을 선택해주세요.</div></div>
+    </div>
+    <div class="section-card">
+      <div class="section-head"><div class="section-label"><span class="dot dot-green"></span>처방 기간 및 지원 내용</div></div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;color:#888;margin-bottom:6px">여행 기간</div>
+        <div class="period-tabs" id="period-tabs">
+          <div class="ptab" onclick="setPeriod(this,'당일')">당일</div>
+          <div class="ptab on" onclick="setPeriod(this,'1박 2일')">1박 2일</div>
+          <div class="ptab" onclick="setPeriod(this,'2박 3일')">2박 3일</div>
+          <div class="ptab" onclick="setPeriod(this,'3박 4일')">3박 4일</div>
+          <div class="ptab" onclick="setPeriod(this,'장기 5일+')">장기 5일+</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>출발 희망일</label><input type="date" id="departureDate"/></div>
+        <div class="field"><label>동반 인원</label>
+          <select id="companionCount">
+            <option value="1">1명 (본인)</option>
+            <option value="2" selected>2명 (배우자 동반)</option>
+            <option value="3">3명</option>
+            <option value="4">4명</option>
+            <option value="5">5명 이상</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#888;margin-bottom:6px">지원 항목</div>
+      <div class="tag-row" id="support-tags">
+        <div class="stag on" onclick="this.classList.toggle('on')">교통비</div>
+        <div class="stag on" onclick="this.classList.toggle('on')">숙박비</div>
+        <div class="stag on" onclick="this.classList.toggle('on')">식비</div>
+        <div class="stag" onclick="this.classList.toggle('on')">입장료</div>
+        <div class="stag" onclick="this.classList.toggle('on')">체험비</div>
+        <div class="stag on" onclick="this.classList.toggle('on')">의료 동행</div>
+        <div class="stag" onclick="this.classList.toggle('on')">가이드 동행</div>
+      </div>
+      <div class="summary">
+        <div class="srow"><span class="sk">처방 대상자</span><span class="sv" id="s-patient">미선택</span></div>
+        <div class="srow"><span class="sk">주진단</span><span class="sv sv-red" id="s-diagnosis">-</span></div>
+        <div class="srow"><span class="sk">선택 프로그램</span><span class="sv sv-teal" id="s-program">미선택</span></div>
+        <div class="srow"><span class="sk">선택 장소</span><span class="sv sv-teal" id="s-place">미선택</span></div>
+        <div class="srow"><span class="sk">여행 기간</span><span class="sv" id="s-period">1박 2일</span></div>
+        <div class="srow"><span class="sk">처방 기관</span><span class="sv" id="s-hospital">A병원</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-draft" onclick="saveDraft()">임시 저장</button>
+        <button class="btn-issue" id="issue-btn" onclick="issuePrescription()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          처방 오더 발행
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-icon"><svg viewBox="0 0 28 28" fill="none"><path d="M5 14l7 7L23 7" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="modal-title">처방 오더 발행 완료</div>
+    <div class="modal-sub">홍길동 환자의 관광 처방이 정상 발행되었습니다.</div>
+    <div class="modal-rxno" id="modal-rxno">RX-2026-000000</div>
+    <button class="modal-btn" onclick="closeModal()">확인</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var PATIENT_ID = null;
+
+// ── 환자 선택/로드 ──────────────────────────
+var DISEASE_STATUS_LABEL = { ACTIVE: '치료 중', OBSERVING: '관찰 중' };
+var SCORE_LABEL = { PHQ9: 'PHQ-9', GAD7: 'GAD-7', SF8: 'SF-8' };
+
+async function loadPatientList() {
+  var sel = document.getElementById('patient-select');
+  try {
+    var res = await fetch('/api/patient/list');
+    var data = await res.json();
+    sel.innerHTML = '';
+
+    if (!data.success || data.count === 0) {
+      sel.innerHTML = '<option value="">등록된 환자가 없습니다</option>';
+      return;
+    }
+
+    data.patients.forEach(function(p, idx) {
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name + ' (' + p.patientNo + ')';
+      sel.appendChild(opt);
+    });
+
+    // 첫 환자 자동 선택
+    sel.value = data.patients[0].id;
+    PATIENT_ID = data.patients[0].id;
+    loadPatientDetail(PATIENT_ID);
+
+  } catch(e) {
+    sel.innerHTML = '<option value="">환자 목록 로드 실패</option>';
+  }
+}
+
+function onPatientChange() {
+  var sel = document.getElementById('patient-select');
+  if (!sel.value) return;
+  PATIENT_ID = parseInt(sel.value);
+  loadPatientDetail(PATIENT_ID);
+}
+
+async function loadPatientDetail(patientId) {
+  try {
+    var res = await fetch('/api/patient/' + patientId + '/detail');
+    var data = await res.json();
+    if (!data.success) return;
+    renderPatientDetail(data.patient);
+  } catch(e) {
+    showToast('환자 정보를 불러오지 못했습니다.', 'error');
+  }
+}
+
+function calcAge(birthDateStr) {
+  if (!birthDateStr) return '';
+  var birth = new Date(birthDateStr);
+  var now = new Date();
+  var age = now.getFullYear() - birth.getFullYear();
+  if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function renderPatientDetail(p) {
+  // 기본정보
+  document.getElementById('pt-avatar').textContent = p.name ? p.name.charAt(0) : '-';
+  document.getElementById('pt-name').textContent = p.name || '-';
+
+  var age = calcAge(p.birthDate);
+  var birthFmt = p.birthDate ? p.birthDate.replace(/-/g, '.') : '';
+  document.getElementById('pt-meta').textContent = [birthFmt + (age !== '' ? ' (만 ' + age + '세)' : ''), p.patientNo].filter(Boolean).join(' · ');
+
+  document.getElementById('pt-phone').textContent = p.phone || '-';
+  document.getElementById('pt-area').textContent = p.areaName || '-';
+  document.getElementById('pt-guardian').textContent = p.guardianName || '-';
+
+  // 배지
+  var badgeHtml = '';
+  if (p.diagnosisCode) badgeHtml += '<span class="badge badge-red">' + p.diagnosisName + ' (주진단)</span>';
+  if (p.targetType) {
+    p.targetType.split(',').forEach(function(t) {
+      if (t.trim()) badgeHtml += '<span class="badge badge-amber">' + t.trim() + '</span>';
+    });
+  }
+  badgeHtml += '<span class="badge badge-teal">처방 대상자</span>';
+  document.getElementById('pt-badges').innerHTML = badgeHtml;
+
+  // 상병 이력
+  var dEl = document.getElementById('pt-diseases');
+  if (!p.diseases || p.diseases.length === 0) {
+    dEl.innerHTML = '<div style="font-size:11px;color:#aaa;text-align:center;padding:8px 0">등록된 상병 이력이 없습니다.</div>';
+  } else {
+    dEl.innerHTML = p.diseases.map(function(d) {
+      var statusClass = d.status === 'ACTIVE' ? 'tag-active' : 'tag-obs';
+      var statusLabel = DISEASE_STATUS_LABEL[d.status] || d.status;
+      var dateFmt = d.diagnosedDate ? d.diagnosedDate.replace(/-/g, '.') : '';
+      return '<div class="disease-item"><span class="icd">' + d.icdCode + '</span><div style="flex:1"><div class="disease-name">' + d.diseaseName + '</div><div class="disease-date">' + [dateFmt, d.doctorName].filter(Boolean).join(' · ') + '</div></div><span class="status-tag ' + statusClass + '">' + statusLabel + '</span></div>';
+    }).join('');
+  }
+
+  // 임상 점수
+  var sEl = document.getElementById('pt-scores');
+  if (!p.clinicalScores || p.clinicalScores.length === 0) {
+    sEl.innerHTML = '<div style="font-size:11px;color:#aaa;text-align:center;padding:8px 0;grid-column:1/-1">등록된 평가 점수가 없습니다.</div>';
+  } else {
+    sEl.innerHTML = p.clinicalScores.map(function(s) {
+      var label = SCORE_LABEL[s.scoreType] || s.scoreType;
+      var colorClass = (s.scoreLevel === '중증' || s.scoreLevel === '심각') ? 'score-danger' : 'score-warn';
+      return '<div class="score-box"><div class="score-label">' + label + '</div><div class="score-val ' + colorClass + '">' + s.scoreValue + '</div><div style="font-size:10px" class="' + colorClass + '">' + (s.scoreLevel || '') + '</div></div>';
+    }).join('');
+  }
+
+  // 요약 패널 갱신
+  document.getElementById('s-patient').textContent = p.name + ' (' + p.patientNo + ')';
+  document.getElementById('s-diagnosis').textContent = p.diagnosisCode ? (p.diagnosisCode + ' ' + p.diagnosisName) : '진단 미등록';
+  document.getElementById('s-hospital').textContent = document.getElementById('hospitalName').value;
+}
+var selectedId = '';
+var selectedName = '';
+var selectedPeriod = '1박 2일';
+var currentProgram = 'nature';
+var rxSeq = String(Math.floor(100000 + Math.random() * 900000));
+document.getElementById('rx-seq').textContent = rxSeq;
+document.getElementById('rx-year').textContent = new Date().getFullYear();
+var depDate = new Date();
+depDate.setDate(depDate.getDate() + 7);
+document.getElementById('departureDate').value = depDate.toISOString().split('T')[0];
+document.getElementById('hospitalName').addEventListener('input', function() {
+  document.getElementById('s-hospital').textContent = this.value;
+});
+var PROGRAMS = [
+  { key:'nature', icon:'🌿', name:'자연 힐링 여행', sub:'생태관광·국립공원·산림치유', type:'eco', src:'생태관광' },
+  { key:'culture', icon:'🎭', name:'문화 예술 탐방', sub:'박물관·공연 관람', type:'kor', contentTypeId:'14', src:'국문API' },
+  { key:'wellness', icon:'🧘', name:'웰니스 케어 여행', sub:'명상·스파·온천', type:'wellness', src:'웰니스API' },
+  { key:'family', icon:'👨‍👩‍👧', name:'가족 동반 여행', sub:'리조트·체험학습', type:'kor', contentTypeId:'28', src:'국문API' },
+  { key:'rural', icon:'🌾', name:'농촌 체험 관광', sub:'걷기여행 코스', type:'durunubi', src:'두루누비' },
+  { key:'barrier', icon:'♿', name:'무장애 여행', sub:'배리어프리 코스', type:'kor', contentTypeId:'12', src:'국문API' }
+];
+function renderProgramCards() {
+  var grid = document.getElementById('program-grid');
+  grid.innerHTML = '';
+  PROGRAMS.forEach(function(p) {
+    var card = document.createElement('div');
+    card.className = 'program-card' + (p.key === currentProgram ? ' active' : '');
+    card.innerHTML = '<div class="program-src">' + p.src + '</div><div class="program-icon">' + p.icon + '</div><div class="program-name">' + p.name + '</div><div class="program-sub">' + p.sub + '</div>';
+    card.addEventListener('click', function() {
+      currentProgram = p.key;
+      renderProgramCards();
+      loadCurrentProgram();
+    });
+    grid.appendChild(card);
+  });
+}
+function getProgramDef(key) { return PROGRAMS.filter(function(p){ return p.key === key; })[0]; }
+async function loadCurrentProgram() {
+  var program = getProgramDef(currentProgram);
+  var grid = document.getElementById('place-grid');
+  grid.innerHTML = '<div class="loading-text">목록을 불러오는 중...</div>';
+  selectedId = '';
+  selectedName = '';
+  document.getElementById('s-place').textContent = '미선택';
+  document.getElementById('s-program').textContent = program.name;
+  var areaCode = document.getElementById('area-filter').value;
+  try {
+    if (program.type === 'wellness') { await loadWellnessPlaces(areaCode); }
+    else if (program.type === 'kor') { await loadKorPlaces(areaCode, program.contentTypeId); }
+    else if (program.type === 'durunubi') { await loadDurunubiCourses(); }
+    else if (program.type === 'eco') { await loadEcoPlaces(areaCode); }
+  } catch(e) { grid.innerHTML = '<div class="error-text">목록 로드 실패: 서버를 확인해주세요.</div>'; }
+}
+async function loadWellnessPlaces(areaCode) {
+  var url = areaCode ? '/api/wellness/list/' + areaCode + '?numOfRows=9' : '/api/wellness/list?numOfRows=9';
+  var res = await fetch(url);
+  var data = await res.json();
+  renderPlaceCards(data, function(item) {
+    return { id: item.contentId || item.title, name: item.title, addr: item.baseAddr || item.addr1 || '', img: item.firstImage, meta: '' };
+  });
+}
+async function loadKorPlaces(areaCode, contentTypeId) {
+  var url = '/api/korservice/list?numOfRows=9&contentTypeId=' + contentTypeId + (areaCode ? '&areaCode=' + areaCode : '');
+  var res = await fetch(url);
+  var data = await res.json();
+  renderPlaceCards(data, function(item) {
+    return { id: item.contentId || item.title, name: item.title, addr: item.addr1 || '', img: item.firstImage, meta: '' };
+  });
+}
+async function loadDurunubiCourses() {
+  var res = await fetch('/api/durunubi/courses?numOfRows=9');
+  var data = await res.json();
+  renderPlaceCards(data, function(item) {
+    var hours = item.crsTotlRqrmHour ? Math.round(item.crsTotlRqrmHour / 60) + '시간' : '';
+    var dist = item.crsDstnc ? item.crsDstnc + 'km' : '';
+    return { id: item.crsIdx, name: item.crsKorNm, addr: item.sigun || '', img: null, meta: [dist, hours].filter(Boolean).join(' · ') };
+  });
+}
+
+async function loadEcoPlaces(areaCode) {
+  var url = '/api/korservice/eco?numOfRows=9' + (areaCode ? '&areaCode=' + areaCode : '');
+  var res = await fetch(url);
+  var data = await res.json();
+  renderPlaceCards(data, function(item) {
+    return {
+      id: item.contentId || item.title,
+      name: item.title,
+      addr: item.addr1 || '',
+      img: item.firstImage,
+      meta: '생태관광'
+    };
+  });
+}
+
+function renderPlaceCards(data, mapFn) {
+  var grid = document.getElementById('place-grid');
+  if (!data.success || data.count === 0) { grid.innerHTML = '<div class="error-text">해당 조건의 목록이 없습니다.</div>'; return; }
+  grid.innerHTML = '';
+  data.items.forEach(function(raw) {
+    var item = mapFn(raw);
+    var card = document.createElement('div');
+    card.className = 'place-card';
+    card.setAttribute('data-id', item.id || '');
+    card.setAttribute('data-name', item.name || '');
+    var imgHtml = item.img
+      ? '<img class="place-img" src="' + item.img + '" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'" alt=""/><div class="place-img-ph" style="display:none">🏞️</div>'
+      : '<div class="place-img-ph">🏞️</div>';
+    card.innerHTML = imgHtml + '<div class="place-info"><div class="place-name">' + (item.name || '') + '</div><div class="place-addr">' + (item.addr || '') + '</div>' + (item.meta ? '<div class="place-meta">' + item.meta + '</div>' : '') + '</div><div class="selected-mark"><svg viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div>';
+    card.addEventListener('click', function() {
+      document.querySelectorAll('.place-card').forEach(function(c){ c.classList.remove('selected'); });
+      card.classList.add('selected');
+      selectedId = card.getAttribute('data-id');
+      selectedName = card.getAttribute('data-name');
+      document.getElementById('s-place').textContent = selectedName;
+    });
+    grid.appendChild(card);
+  });
+}
+function setPeriod(el, val) {
+  document.querySelectorAll('.ptab').forEach(function(t){ t.classList.remove('on'); });
+  el.classList.add('on');
+  selectedPeriod = val;
+  document.getElementById('s-period').textContent = val;
+}
+function getSupportItems() {
+  var items = [];
+  document.querySelectorAll('.stag.on').forEach(function(t){ items.push(t.textContent.trim()); });
+  return items.join(',');
+}
+function saveDraft() { showToast('임시 저장되었습니다.', ''); }
+async function issuePrescription() {
+  if (!PATIENT_ID) { showToast('환자를 선택해주세요.', 'error'); return; }
+  if (!selectedId) { showToast('관광지/코스를 선택해주세요.', 'error'); return; }
+  if (!selectedPeriod) { showToast('여행 기간을 선택해주세요.', 'error'); return; }
+  var program = getProgramDef(currentProgram);
+  var btn = document.getElementById('issue-btn');
+  btn.disabled = true;
+  btn.textContent = '발행 중...';
+  var body = {
+    patientId: PATIENT_ID,
+    doctorName: document.getElementById('doctorName').value,
+    hospitalName: document.getElementById('hospitalName').value,
+    prescriptionReason: '사회적 고립',
+    clinicalNote: document.getElementById('clinicalNote').value,
+    programType: program.name,
+    contentId: selectedId,
+    tourPlaceName: selectedName,
+    tourPeriod: selectedPeriod,
+    departureDate: document.getElementById('departureDate').value,
+    companionCount: parseInt(document.getElementById('companionCount').value),
+    supportItems: getSupportItems()
+  };
+  try {
+    var res = await fetch('/api/prescription/issue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    var data = await res.json();
+    if (data.success) {
+      document.getElementById('modal-rxno').textContent = data.prescription.rxNo;
+      document.getElementById('modal').classList.add('show');
+    } else { showToast('발행 실패: ' + (data.message || '오류 발생'), 'error'); }
+  } catch(e) { showToast('서버 연결 오류가 발생했습니다.', 'error'); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 처방 오더 발행';
+  }
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); location.reload(); }
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+renderProgramCards();
+loadCurrentProgram();
+loadPatientList();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>처방 이력 조회 - 사회적 관광 처방 시스템</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;background:#F4F6F9;color:#1a1a1a;font-size:14px}
+
+        .top-bar{background:#fff;border-bottom:1px solid #E8EBF0;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-mark{width:28px;height:28px;background:#1D9E75;border-radius:6px;display:flex;align-items:center;justify-content:center}
+        .logo-mark svg{width:15px;height:15px}
+        .logo-name{font-size:14px;font-weight:600;color:#1a1a1a}
+        .logo-sub{font-size:11px;color:#888;margin-left:4px}
+        .top-nav{display:flex;align-items:center;gap:12px}
+        .nav-link{font-size:12px;color:#888;text-decoration:none;padding:5px 10px;border-radius:6px;transition:all .12s}
+        .nav-link:hover{background:#F4F6F9;color:#1a1a1a}
+        .nav-link.active{background:#E1F5EE;color:#085041;font-weight:500}
+
+        .page{max-width:960px;margin:0 auto;padding:1.5rem}
+
+        .page-title{font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+        .page-sub{font-size:12px;color:#888;margin-bottom:20px}
+
+        .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;background:#fff;border:1px solid #E8EBF0;border-radius:10px;padding:10px 14px}
+        .filter-bar select,.filter-bar input{font-size:12px;padding:5px 10px;border:1px solid #E0E4EA;border-radius:6px;background:#F8FAF9;color:#1a1a1a;outline:none;font-family:inherit}
+        .filter-bar input{width:180px}
+        .filter-label{font-size:11px;color:#888;white-space:nowrap}
+        .filter-count{margin-left:auto;font-size:12px;color:#888}
+        .filter-count span{font-weight:600;color:#1D9E75}
+
+        .table-card{background:#fff;border:1px solid #E8EBF0;border-radius:12px;overflow:hidden}
+        .table-head{display:grid;grid-template-columns:120px 80px 100px 120px 80px 80px 80px;gap:0;background:#F8FAF9;border-bottom:1px solid #E8EBF0;padding:0 16px}
+        .th{font-size:11px;font-weight:600;color:#888;padding:10px 8px;letter-spacing:.04em}
+        .table-body{min-height:200px}
+        .table-row{display:grid;grid-template-columns:120px 80px 100px 120px 80px 80px 80px;gap:0;border-bottom:1px solid #EEF1F5;padding:0 16px;transition:background .1s;cursor:pointer}
+        .table-row:last-child{border-bottom:none}
+        .table-row:hover{background:#F8FAF9}
+        .td{font-size:12px;color:#1a1a1a;padding:12px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .td-mono{font-family:monospace;font-size:11px;color:#555}
+        .td-teal{color:#0F6E56;font-weight:500}
+        .td-gray{color:#888}
+
+        .status-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+        .status-issued{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+        .status-draft{background:#FAEEDA;color:#633806;border:1px solid #EF9F27}
+        .status-cancelled{background:#FCEBEB;color:#791F1F;border:1px solid #F09595}
+
+        .prog-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:#EEF1F5;color:#555}
+
+        .empty-state{text-align:center;padding:48px 0;color:#aaa}
+        .empty-icon{font-size:36px;margin-bottom:12px}
+        .empty-text{font-size:13px}
+
+        .loading-state{text-align:center;padding:48px 0;color:#aaa;font-size:12px}
+
+        /* 상세 모달 */
+        .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:200}
+        .modal-backdrop.show{display:flex}
+        .modal{background:#fff;border-radius:14px;padding:2rem;width:480px;max-height:90vh;overflow-y:auto}
+        .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #EEF1F5}
+        .modal-title{font-size:16px;font-weight:700;color:#1a1a1a}
+        .modal-rxno{font-family:monospace;font-size:11px;color:#0F6E56;background:#E1F5EE;padding:3px 10px;border-radius:20px}
+        .modal-close{width:28px;height:28px;border:none;background:#F4F6F9;border-radius:50%;cursor:pointer;font-size:14px;color:#888;display:flex;align-items:center;justify-content:center}
+        .modal-section{margin-bottom:16px}
+        .modal-section-label{font-size:11px;font-weight:600;color:#888;letter-spacing:.05em;margin-bottom:8px}
+        .modal-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F4F6F9;font-size:12px}
+        .modal-row:last-child{border-bottom:none}
+        .modal-key{color:#888}
+        .modal-val{color:#1a1a1a;font-weight:500;text-align:right;max-width:260px}
+        .modal-val-teal{color:#0F6E56}
+        .support-tags{display:flex;gap:4px;flex-wrap:wrap}
+        .support-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo">
+        <div class="logo-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5C8 1.5 4 5 4 9a4 4 0 008 0c0-4-4-7.5-4-7.5z" fill="white" opacity=".9"/><circle cx="8" cy="9" r="1.5" fill="#1D9E75"/></svg></div>
+        <span class="logo-name">사회적 관광 처방 시스템</span>
+        <span class="logo-sub">Korea Tourism Organization</span>
+    </div>
+    <div class="top-nav">
+        <a class="nav-link" href="/register.html">환자 등록</a>
+        <a class="nav-link" href="/index.html">처방 발행</a>
+        <a class="nav-link active" href="/prescription.html">처방 이력</a>
+    </div>
+</div>
+
+<div class="page">
+    <div class="page-title">처방 이력 조회</div>
+    <div class="page-sub">발행된 전체 관광 처방 목록입니다.</div>
+
+    <div class="filter-bar">
+        <span class="filter-label">환자</span>
+        <select id="filter-patient" onchange="applyFilter()">
+            <option value="">전체</option>
+        </select>
+        <span class="filter-label">프로그램</span>
+        <select id="filter-program" onchange="applyFilter()">
+            <option value="">전체</option>
+            <option>자연 힐링 여행</option>
+            <option>문화 예술 탐방</option>
+            <option>웰니스 케어 여행</option>
+            <option>가족 동반 여행</option>
+            <option>농촌 체험 관광</option>
+            <option>무장애 여행</option>
+        </select>
+        <span class="filter-label">상태</span>
+        <select id="filter-status" onchange="applyFilter()">
+            <option value="">전체</option>
+            <option value="ISSUED">발행</option>
+            <option value="DRAFT">임시저장</option>
+            <option value="CANCELLED">취소</option>
+        </select>
+        <div class="filter-count">총 <span id="total-count">0</span>건</div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-head">
+            <div class="th">처방번호</div>
+            <div class="th">환자명</div>
+            <div class="th">프로그램</div>
+            <div class="th">관광지</div>
+            <div class="th">기간</div>
+            <div class="th">발행일</div>
+            <div class="th">상태</div>
+        </div>
+        <div class="table-body" id="table-body">
+            <div class="loading-state">데이터를 불러오는 중...</div>
+        </div>
+    </div>
+</div>
+
+<!-- 상세 모달 -->
+<div class="modal-backdrop" id="modal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">처방 상세 정보</div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <span class="modal-rxno" id="m-rxno">RX-2026-000000</span>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-label">환자 정보</div>
+            <div class="modal-row"><span class="modal-key">환자명</span><span class="modal-val" id="m-patient">-</span></div>
+            <div class="modal-row"><span class="modal-key">환자번호</span><span class="modal-val modal-val-teal" id="m-patientno">-</span></div>
+            <div class="modal-row"><span class="modal-key">주진단</span><span class="modal-val" id="m-diag">-</span></div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-label">처방 정보</div>
+            <div class="modal-row"><span class="modal-key">처방 의사</span><span class="modal-val" id="m-doctor">-</span></div>
+            <div class="modal-row"><span class="modal-key">처방 기관</span><span class="modal-val" id="m-hospital">-</span></div>
+            <div class="modal-row"><span class="modal-key">처방 사유</span><span class="modal-val" id="m-reason">-</span></div>
+            <div class="modal-row"><span class="modal-key">임상 소견</span><span class="modal-val" id="m-note" style="word-break:break-all">-</span></div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-label">관광 정보</div>
+            <div class="modal-row"><span class="modal-key">프로그램</span><span class="modal-val modal-val-teal" id="m-program">-</span></div>
+            <div class="modal-row"><span class="modal-key">관광지</span><span class="modal-val" id="m-place">-</span></div>
+            <div class="modal-row"><span class="modal-key">여행 기간</span><span class="modal-val" id="m-period">-</span></div>
+            <div class="modal-row"><span class="modal-key">출발 희망일</span><span class="modal-val" id="m-depart">-</span></div>
+            <div class="modal-row"><span class="modal-key">동반 인원</span><span class="modal-val" id="m-companion">-</span></div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-label">지원 항목</div>
+            <div class="support-tags" id="m-support"></div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-label">발행 정보</div>
+            <div class="modal-row"><span class="modal-key">발행 일시</span><span class="modal-val" id="m-issued">-</span></div>
+            <div class="modal-row"><span class="modal-key">상태</span><span class="modal-val" id="m-status">-</span></div>
+        </div>
+
+        <!-- 모달 닫기 버튼 아래에 추가 -->
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #EEF1F5;display:flex;gap:8px">
+            <button id="cancel-btn" onclick="cancelPrescription()" style="flex:1;padding:9px;border:1px solid #F09595;border-radius:8px;font-size:13px;color:#791F1F;background:#FCEBEB;cursor:pointer;font-family:inherit">처방 취소</button>
+            <button onclick="closeModal()" style="flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;background:#1D9E75;color:#fff;cursor:pointer;font-family:inherit">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var allData = [];
+
+    // ── 데이터 로드 ──────────────────────────
+    async function loadAll() {
+        try {
+            var [rxRes, ptRes] = await Promise.all([
+                fetch('/api/prescription/list'),
+                fetch('/api/patient/list')
+            ]);
+            var rxData = await rxRes.json();
+            var ptData = await ptRes.json();
+
+            // 환자 필터 드롭다운
+            if (ptData.success) {
+                var sel = document.getElementById('filter-patient');
+                ptData.patients.forEach(function(p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.name;
+                    opt.textContent = p.name;
+                    sel.appendChild(opt);
+                });
+            }
+
+            if (!rxData.success) {
+                showEmpty();
+                return;
+            }
+
+            allData = rxData.prescriptions || [];
+            applyFilter();
+
+        } catch(e) {
+            document.getElementById('table-body').innerHTML =
+                '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">데이터를 불러오지 못했습니다.<br>서버를 확인해주세요.</div></div>';
+        }
+    }
+
+    async function cancelPrescription() {
+        if (!currentRxNo) return;
+        if (!confirm(currentRxNo + ' 처방을 취소하시겠습니까?')) return;
+
+        try {
+            var res = await fetch('/api/prescription/cancel/' + currentRxNo, {
+                method: 'PATCH'
+            });
+            var data = await res.json();
+
+            if (data.success) {
+                closeModal();
+                await loadAll();
+                showToast('처방이 취소되었습니다.');
+            } else {
+                showToast(data.message || '취소 실패', 'error');
+            }
+        } catch(e) {
+            showToast('서버 오류가 발생했습니다.', 'error');
+        }
+    }
+
+    function showToast(msg, type) {
+        var t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:' +
+            (type === 'error' ? '#A32D2D' : '#1a1a1a') +
+            ';color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;white-space:nowrap';
+        document.body.appendChild(t);
+        setTimeout(function(){ document.body.removeChild(t); }, 2400);
+    }
+
+    loadAll();
+
+    // ── 필터 적용 ──────────────────────────
+    function applyFilter() {
+        var filterPt = document.getElementById('filter-patient').value;
+        var filterProg = document.getElementById('filter-program').value;
+        var filterStatus = document.getElementById('filter-status').value;
+
+        var filtered = allData.filter(function(rx) {
+            if (filterPt && rx.patientName !== filterPt) return false;
+            if (filterProg && rx.programType !== filterProg) return false;
+            if (filterStatus && rx.status !== filterStatus) return false;
+            return true;
+        });
+
+        document.getElementById('total-count').textContent = filtered.length;
+        renderTable(filtered);
+    }
+
+    // ── 테이블 렌더링 ──────────────────────────
+    function renderTable(data) {
+        var body = document.getElementById('table-body');
+
+        if (!data || data.length === 0) {
+            body.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">발행된 처방이 없습니다.</div></div>';
+            return;
+        }
+
+        body.innerHTML = '';
+        data.forEach(function(rx) {
+            var statusBadge = getStatusBadge(rx.status);
+            var issuedDate = rx.issuedAt ? rx.issuedAt.substring(0, 10) : '-';
+            var programShort = rx.programType
+                ? rx.programType.replace(' 여행','').replace(' 탐방','').replace(' 관광','')
+                : '-';
+
+            var row = document.createElement('div');
+            row.className = 'table-row';
+            row.innerHTML =
+                '<div class="td td-mono">' + (rx.rxNo || '-') + '</div>' +
+                '<div class="td td-teal">' + (rx.patientName || '-') + '</div>' +
+                '<div class="td"><span class="prog-badge">' + (programShort || '-') + '</span></div>' +
+                '<div class="td">' + (rx.tourPlaceName || '-') + '</div>' +
+                '<div class="td td-gray">' + (rx.tourPeriod || '-') + '</div>' +
+                '<div class="td td-gray">' + issuedDate + '</div>' +
+                '<div class="td">' + statusBadge + '</div>';
+
+            row._rxData = rx;
+            row.addEventListener('click', function() {
+                openModal(this._rxData);
+            });
+
+            body.appendChild(row);
+        });
+    }
+
+    function getStatusBadge(status) {
+        if (status === 'ISSUED') return '<span class="status-badge status-issued">발행</span>';
+        if (status === 'DRAFT')  return '<span class="status-badge status-draft">임시저장</span>';
+        if (status === 'CANCELLED') return '<span class="status-badge status-cancelled">취소</span>';
+        return '<span class="status-badge">' + (status||'-') + '</span>';
+    }
+
+
+
+
+    // ── 상세 모달 ──────────────────────────
+    var currentRxNo = '';
+
+    function openModal(rx) {
+        currentRxNo = rx.rxNo;
+
+        // 취소된 처방이면 취소 버튼 숨김
+        var cancelBtn = document.getElementById('cancel-btn');
+        if (rx.status === 'CANCELLED') {
+            cancelBtn.style.display = 'none';
+        } else {
+            cancelBtn.style.display = 'block';
+        }
+
+        document.getElementById('m-rxno').textContent = rx.rxNo || '-';
+        document.getElementById('m-patient').textContent = rx.patientName || '-';
+        document.getElementById('m-patientno').textContent = rx.patientNo || '-';
+        document.getElementById('m-diag').textContent = '-';
+        document.getElementById('m-doctor').textContent = rx.doctorName || '-';
+        document.getElementById('m-hospital').textContent = rx.hospitalName || '-';
+        document.getElementById('m-reason').textContent = rx.prescriptionReason || '-';
+        document.getElementById('m-note').textContent = rx.clinicalNote || '-';
+        document.getElementById('m-program').textContent = rx.programType || '-';
+        document.getElementById('m-place').textContent = rx.tourPlaceName || '-';
+        document.getElementById('m-period').textContent = rx.tourPeriod || '-';
+        document.getElementById('m-depart').textContent = rx.departureDate || '-';
+        document.getElementById('m-companion').textContent = rx.companionCount ? rx.companionCount + '명' : '-';
+        document.getElementById('m-issued').textContent = rx.issuedAt ? rx.issuedAt.substring(0, 16).replace('T', ' ') : '-';
+        document.getElementById('m-status').textContent = rx.status === 'ISSUED' ? '✅ 발행 완료' : rx.status === 'CANCELLED' ? '❌ 취소됨' : (rx.status || '-');
+
+        var supportHtml = '';
+        if (rx.supportItems) {
+            rx.supportItems.split(',').forEach(function(s) {
+                if (s.trim()) supportHtml += '<span class="support-tag">' + s.trim() + '</span>';
+            });
+        }
+        document.getElementById('m-support').innerHTML = supportHtml || '<span style="font-size:11px;color:#aaa">없음</span>';
+
+        document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+
+
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+
+</script>
+</body>
+</html>
