@@ -61,4 +61,10 @@ public class KorServiceItem {
 
     @JsonProperty("modifiedtime")
     private String modifiedTime;
+
+    @JsonProperty("overview")
+    private String overview;        // 개요
+
+    @JsonProperty("homepage")
+    private String homepage;        // 홈페이지
 }

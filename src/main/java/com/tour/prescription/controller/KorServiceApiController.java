@@ -56,4 +56,25 @@ public class KorServiceApiController {
                 "items", items
         ));
     }
+
+    // 관광지 상세 정보 조회
+    @GetMapping("/detail/{contentId}")
+    public ResponseEntity<?> getDetail(
+            @PathVariable String contentId,
+            @RequestParam(defaultValue = "12") String contentTypeId) {
+
+        try {
+            String detail = korServiceApiService.getDetailCommon(contentId, contentTypeId);
+            if (detail == null) {
+                return ResponseEntity.ok(Map.of("success", false, "message", "상세 정보 없음"));
+            }
+            // detail이 이미 JSON 문자열이므로 파싱해서 반환
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Object detailObj = mapper.readValue(detail, Object.class);
+            return ResponseEntity.ok(Map.of("success", true, "detail", detailObj));
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
 }

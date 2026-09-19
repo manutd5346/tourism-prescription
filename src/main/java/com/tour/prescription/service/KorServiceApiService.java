@@ -2,6 +2,7 @@ package com.tour.prescription.service;
 
 import com.tour.prescription.dto.korservice.KorServiceItem;
 import com.tour.prescription.dto.korservice.KorServiceResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -163,5 +164,52 @@ public class KorServiceApiService {
             log.error("[KorService-생태관광] 호출 오류: {}", e.getMessage(), e);
             return Collections.emptyList();
         }
+
+
     }
+
+    /**
+     * 관광지 공통 상세 정보 조회
+     */
+    public String getDetailCommon(String contentId, String contentTypeId) {
+
+        URI uri = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/detailCommon2")
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("MobileOS", mobileOs)
+                .queryParam("MobileApp", mobileApp)
+                .queryParam("_type", "json")
+                .queryParam("contentId", contentId)
+                .build(false)
+                .toUri();
+
+        log.info("[KorService-상세] contentId={}", contentId);
+
+        try {
+            KorServiceResponse response = tourApiWebClient
+                    .get()
+                    .uri(uri)
+                    .retrieve()
+                    .bodyToMono(KorServiceResponse.class)
+                    .block();
+
+            if (response == null
+                    || response.getResponse() == null
+                    || response.getResponse().getBody() == null
+                    || response.getResponse().getBody().getItems() == null
+                    || response.getResponse().getBody().getItems().getItem() == null
+                    || response.getResponse().getBody().getItems().getItem().isEmpty()) {
+                return null;
+            }
+
+            KorServiceItem item = response.getResponse().getBody().getItems().getItem().get(0);
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(item);
+
+        } catch (Exception e) {
+            log.error("[KorService-상세] 오류: {}", e.getMessage());
+            return null;
+        }
+    }
+
+
 }
