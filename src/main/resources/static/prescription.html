@@ -185,6 +185,7 @@
         <!-- 모달 닫기 버튼 아래에 추가 -->
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid #EEF1F5;display:flex;gap:8px">
             <button id="cancel-btn" onclick="cancelPrescription()" style="flex:1;padding:9px;border:1px solid #F09595;border-radius:8px;font-size:13px;color:#791F1F;background:#FCEBEB;cursor:pointer;font-family:inherit">처방 취소</button>
+            <button onclick="printPrescription()" style="flex:1;padding:9px;border:1px solid #5DCAA5;border-radius:8px;font-size:13px;color:#085041;background:#E1F5EE;cursor:pointer;font-family:inherit">🖨️ 처방전 출력</button>
             <button onclick="closeModal()" style="flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;background:#1D9E75;color:#fff;cursor:pointer;font-family:inherit">닫기</button>
         </div>
     </div>
@@ -228,6 +229,8 @@
         }
     }
 
+
+
     async function cancelPrescription() {
         if (!currentRxNo) return;
         if (!confirm(currentRxNo + ' 처방을 취소하시겠습니까?')) return;
@@ -260,7 +263,37 @@
         setTimeout(function(){ document.body.removeChild(t); }, 2400);
     }
 
+
+    var currentRx = null;  // currentRxNo 아래에 추가
+
+    function printPrescription() {
+        if (!currentRx) return;
+        var rx = currentRx;
+
+        var params = new URLSearchParams({
+            rxNo: rx.rxNo || '',
+            patientName: rx.patientName || '',
+            patientNo: rx.patientNo || '',
+            diagnosisCode: '',
+            diagnosisName: '',
+            prescriptionReason: rx.prescriptionReason || '',
+            programType: rx.programType || '',
+            tourPlaceName: rx.tourPlaceName || '',
+            tourPeriod: rx.tourPeriod || '',
+            departureDate: rx.departureDate || '',
+            companionCount: rx.companionCount || '',
+            clinicalNote: rx.clinicalNote || '',
+            doctorName: rx.doctorName || '',
+            hospitalName: rx.hospitalName || '',
+            supportItems: rx.supportItems || '',
+            issuedAt: rx.issuedAt || ''
+        });
+
+        window.open('/prescription-print.html?' + params.toString(), '_blank');
+    }
+
     loadAll();
+
 
     // ── 필터 적용 ──────────────────────────
     function applyFilter() {
@@ -331,6 +364,7 @@
 
     function openModal(rx) {
         currentRxNo = rx.rxNo;
+        currentRx = rx;  // ← 여기 추가
 
         // 취소된 처방이면 취소 버튼 숨김
         var cancelBtn = document.getElementById('cancel-btn');

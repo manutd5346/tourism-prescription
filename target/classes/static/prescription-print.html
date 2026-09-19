@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <title>관광 처방전</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none !important; }
+            .prescription { box-shadow: none !important; border: 1px solid #ccc !important; }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #F4F6F9; display: flex; flex-direction: column; align-items: center; padding: 2rem; min-height: 100vh; }
+
+        .no-print { margin-bottom: 1rem; display: flex; gap: 10px; }
+        .btn { padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; }
+        .btn-print { background: #1D9E75; color: #fff; }
+        .btn-print:hover { background: #0F6E56; }
+        .btn-close { background: #F4F6F9; color: #555; border: 1px solid #E0E4EA; }
+        .btn-close:hover { background: #E8EBF0; }
+
+        .prescription {
+            width: 210mm;
+            min-height: 297mm;
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(0,0,0,.12);
+            padding: 16mm 20mm;
+            position: relative;
+        }
+
+        /* 헤더 */
+        .rx-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 2.5px solid #1D9E75; margin-bottom: 20px; }
+        .rx-logo { display: flex; align-items: center; gap: 10px; }
+        .rx-logo-mark { width: 36px; height: 36px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .rx-logo-mark svg { width: 20px; height: 20px; }
+        .rx-logo-text { font-size: 11px; color: #888; }
+        .rx-logo-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+        .rx-title { text-align: right; }
+        .rx-title-main { font-size: 22px; font-weight: 700; color: #1D9E75; }
+        .rx-title-sub { font-size: 11px; color: #888; margin-top: 2px; }
+
+        /* 처방번호 배너 */
+        .rx-no-banner { background: #F0FBF6; border: 1px solid #C8F0DF; border-radius: 8px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .rx-no-label { font-size: 11px; color: #888; }
+        .rx-no-value { font-family: monospace; font-size: 14px; font-weight: 700; color: #0F6E56; }
+        .rx-date { font-size: 11px; color: #888; }
+
+        /* 섹션 */
+        .section { margin-bottom: 18px; }
+        .section-title { font-size: 11px; font-weight: 700; color: #1D9E75; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #E8EBF0; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .info-row { display: flex; gap: 8px; align-items: flex-start; }
+        .info-key { font-size: 11px; color: #888; white-space: nowrap; width: 80px; flex-shrink: 0; padding-top: 2px; }
+        .info-val { font-size: 13px; color: #1a1a1a; font-weight: 500; flex: 1; }
+        .info-val.highlight { color: #1D9E75; }
+        .info-val.danger { color: #A32D2D; }
+
+        /* 진단 배지 */
+        .diag-badge { display: inline-block; background: #FCEBEB; color: #791F1F; border: 1px solid #F09595; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-family: monospace; margin-right: 6px; }
+
+        /* 관광 정보 박스 */
+        .tour-box { background: #F8FAF9; border: 1px solid #E1F5EE; border-radius: 10px; padding: 14px 16px; }
+        .tour-program { font-size: 16px; font-weight: 700; color: #0F6E56; margin-bottom: 6px; }
+        .tour-place { font-size: 13px; color: #1a1a1a; margin-bottom: 10px; }
+        .tour-meta { display: flex; gap: 20px; }
+        .tour-meta-item { display: flex; flex-direction: column; gap: 2px; }
+        .tour-meta-label { font-size: 10px; color: #888; }
+        .tour-meta-val { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+
+        /* 지원 항목 태그 */
+        .support-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .support-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: #E1F5EE; color: #085041; border: 1px solid #5DCAA5; }
+
+        /* 소견 */
+        .note-box { background: #F8FAF9; border-left: 3px solid #1D9E75; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 12px; color: #444; line-height: 1.7; }
+
+        /* 서명 */
+        .sign-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #E8EBF0; }
+        .sign-box { border: 1px solid #E8EBF0; border-radius: 8px; padding: 12px 14px; }
+        .sign-label { font-size: 10px; color: #888; margin-bottom: 8px; }
+        .sign-name { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+        .sign-org { font-size: 11px; color: #888; }
+        .sign-line { margin-top: 24px; border-top: 1px solid #ccc; padding-top: 4px; font-size: 10px; color: #aaa; text-align: center; }
+
+        /* 하단 */
+        .rx-footer { margin-top: 24px; padding-top: 12px; border-top: 1px dashed #E8EBF0; display: flex; justify-content: space-between; align-items: center; }
+        .rx-footer-logo { font-size: 11px; color: #888; }
+        .rx-footer-warning { font-size: 10px; color: #aaa; text-align: right; }
+
+        /* 워터마크 */
+        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 80px; font-weight: 900; color: rgba(29,158,117,.04); white-space: nowrap; pointer-events: none; z-index: 0; }
+        .content { position: relative; z-index: 1; }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <button class="btn btn-print" onclick="window.print()">🖨️ PDF 저장 / 인쇄</button>
+    <button class="btn btn-close" onclick="window.close()">닫기</button>
+</div>
+
+<div class="prescription">
+    <div class="watermark">관광처방</div>
+    <div class="content">
+
+        <div class="rx-header">
+            <div class="rx-logo">
+                <div class="rx-logo-mark">
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M10 2C10 2 5 6 5 11a5 5 0 0010 0c0-5-5-9-5-9z" fill="white" opacity=".9"/><circle cx="10" cy="11" r="2" fill="#1D9E75"/></svg>
+                </div>
+                <div>
+                    <div class="rx-logo-title">사회적 관광 처방 시스템</div>
+                    <div class="rx-logo-text">한국관광공사 · Korea Tourism Organization</div>
+                </div>
+            </div>
+            <div class="rx-title">
+                <div class="rx-title-main">관광 처방전</div>
+                <div class="rx-title-sub">Tourism Prescription</div>
+            </div>
+        </div>
+
+        <div class="rx-no-banner">
+            <div>
+                <div class="rx-no-label">처방번호</div>
+                <div class="rx-no-value" id="p-rxno">RX-2026-000000</div>
+            </div>
+            <div class="rx-date" id="p-issued">발행일시: -</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">환자 정보</div>
+            <div class="info-grid">
+                <div class="info-row"><span class="info-key">환자명</span><span class="info-val" id="p-name">-</span></div>
+                <div class="info-row"><span class="info-key">등록번호</span><span class="info-val highlight" id="p-patientno">-</span></div>
+                <div class="info-row"><span class="info-key">주진단</span><span class="info-val" id="p-diag">-</span></div>
+                <div class="info-row"><span class="info-key">처방 사유</span><span class="info-val" id="p-reason">-</span></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">관광 처방 내용</div>
+            <div class="tour-box">
+                <div class="tour-program" id="p-program">-</div>
+                <div class="tour-place" id="p-place">-</div>
+                <div class="tour-meta">
+                    <div class="tour-meta-item">
+                        <span class="tour-meta-label">여행 기간</span>
+                        <span class="tour-meta-val" id="p-period">-</span>
+                    </div>
+                    <div class="tour-meta-item">
+                        <span class="tour-meta-label">출발 희망일</span>
+                        <span class="tour-meta-val" id="p-depart">-</span>
+                    </div>
+                    <div class="tour-meta-item">
+                        <span class="tour-meta-label">동반 인원</span>
+                        <span class="tour-meta-val" id="p-companion">-</span>
+                    </div>
+                </div>
+                <div class="support-tags" id="p-support"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">임상 소견</div>
+            <div class="note-box" id="p-note">-</div>
+        </div>
+
+        <div class="sign-section">
+            <div class="sign-box">
+                <div class="sign-label">처방 의사</div>
+                <div class="sign-name" id="p-doctor">-</div>
+                <div class="sign-org" id="p-hospital">-</div>
+                <div class="sign-line">서명 / Sign</div>
+            </div>
+            <div class="sign-box">
+                <div class="sign-label">발행 기관</div>
+                <div class="sign-name">한국관광공사</div>
+                <div class="sign-org">Korea Tourism Organization</div>
+                <div class="sign-line">직인 / Seal</div>
+            </div>
+        </div>
+
+        <div class="rx-footer">
+            <div class="rx-footer-logo">🌿 사회적 관광 처방 시스템 · tourism-prescription-production.up.railway.app</div>
+            <div class="rx-footer-warning">본 처방전은 사회적 관광 처방 시스템을 통해 발행되었습니다.<br>위조·변조 시 법적 책임을 질 수 있습니다.</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function getParam(key) {
+        return new URLSearchParams(window.location.search).get(key) || '-';
+    }
+
+    document.getElementById('p-rxno').textContent = getParam('rxNo');
+    document.getElementById('p-name').textContent = getParam('patientName');
+    document.getElementById('p-patientno').textContent = getParam('patientNo');
+    document.getElementById('p-diag').textContent = getParam('diagnosisCode') !== '-'
+        ? getParam('diagnosisCode') + ' ' + getParam('diagnosisName') : '-';
+    document.getElementById('p-reason').textContent = getParam('prescriptionReason');
+    document.getElementById('p-program').textContent = getParam('programType');
+    document.getElementById('p-place').textContent = getParam('tourPlaceName');
+    document.getElementById('p-period').textContent = getParam('tourPeriod');
+    document.getElementById('p-depart').textContent = getParam('departureDate');
+    document.getElementById('p-companion').textContent = getParam('companionCount') !== '-' ? getParam('companionCount') + '명' : '-';
+    document.getElementById('p-note').textContent = getParam('clinicalNote');
+    document.getElementById('p-doctor').textContent = getParam('doctorName');
+    document.getElementById('p-hospital').textContent = getParam('hospitalName');
+    document.getElementById('p-issued').textContent = '발행일시: ' + (getParam('issuedAt') !== '-' ? getParam('issuedAt').substring(0,16).replace('T',' ') : '-');
+
+    var support = getParam('supportItems');
+    if (support && support !== '-') {
+        var tags = support.split(',').map(function(s) {
+            return '<span class="support-tag">' + s.trim() + '</span>';
+        }).join('');
+        document.getElementById('p-support').innerHTML = tags;
+    }
+</script>
+</body>
+</html>
