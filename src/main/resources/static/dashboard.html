@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>대시보드 - 사회적 관광 처방 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;background:#F4F6F9;color:#1a1a1a;font-size:14px}
+
+        .top-bar{background:#fff;border-bottom:1px solid #E8EBF0;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-mark{width:28px;height:28px;background:#1D9E75;border-radius:6px;display:flex;align-items:center;justify-content:center}
+        .logo-mark svg{width:15px;height:15px}
+        .logo-name{font-size:14px;font-weight:600;color:#1a1a1a}
+        .logo-sub{font-size:11px;color:#888;margin-left:4px}
+        .top-nav{display:flex;align-items:center;gap:12px}
+        .nav-link{font-size:12px;color:#888;text-decoration:none;padding:5px 10px;border-radius:6px;transition:all .12s}
+        .nav-link:hover{background:#F4F6F9;color:#1a1a1a}
+        .nav-link.active{background:#E1F5EE;color:#085041;font-weight:500}
+
+        .page{max-width:1100px;margin:0 auto;padding:1.5rem}
+        .page-title{font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+        .page-sub{font-size:12px;color:#888;margin-bottom:24px}
+
+        /* KPI 카드 */
+        .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+        .kpi-card{background:#fff;border:1px solid #E8EBF0;border-radius:12px;padding:1.25rem;position:relative;overflow:hidden}
+        .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+        .kpi-label{font-size:11px;color:#888;margin-bottom:8px;font-weight:500;letter-spacing:.04em}
+        .kpi-value{font-size:32px;font-weight:700;color:#1a1a1a;margin-bottom:4px;line-height:1}
+        .kpi-sub{font-size:11px;color:#888}
+        .kpi-icon{position:absolute;top:1.25rem;right:1.25rem;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--icon-bg)}
+
+        /* 차트 섹션 */
+        .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+        .chart-card{background:#fff;border:1px solid #E8EBF0;border-radius:12px;padding:1.25rem}
+        .chart-card.full{grid-column:1/-1}
+        .chart-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+        .chart-sub{font-size:11px;color:#888;margin-bottom:16px}
+        .chart-wrap{position:relative;height:220px}
+
+        /* 최근 처방 */
+        .recent-card{background:#fff;border:1px solid #E8EBF0;border-radius:12px;padding:1.25rem;margin-bottom:20px}
+        .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+        .section-title{font-size:13px;font-weight:600;color:#1a1a1a}
+        .section-link{font-size:11px;color:#1D9E75;text-decoration:none}
+        .rx-row{display:grid;grid-template-columns:130px 70px 100px 1fr 70px 70px;gap:0;border-bottom:1px solid #EEF1F5;padding:10px 0;align-items:center}
+        .rx-row:last-child{border-bottom:none}
+        .rx-head{font-size:11px;color:#888;font-weight:500;padding:6px 0;border-bottom:1px solid #E8EBF0;margin-bottom:4px}
+        .rx-mono{font-family:monospace;font-size:11px;color:#555}
+        .rx-teal{font-size:12px;font-weight:500;color:#0F6E56}
+        .rx-gray{font-size:12px;color:#888}
+        .rx-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block}
+        .badge-issued{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+        .badge-cancelled{background:#FCEBEB;color:#791F1F;border:1px solid #F09595}
+        .prog-pill{font-size:10px;padding:2px 8px;border-radius:20px;background:#EEF1F5;color:#555}
+
+        .loading{text-align:center;padding:40px;color:#aaa;font-size:12px}
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo">
+        <div class="logo-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5C8 1.5 4 5 4 9a4 4 0 008 0c0-4-4-7.5-4-7.5z" fill="white" opacity=".9"/><circle cx="8" cy="9" r="1.5" fill="#1D9E75"/></svg></div>
+        <span class="logo-name">사회적 관광 처방 시스템</span>
+        <span class="logo-sub">Korea Tourism Organization</span>
+    </div>
+    <div class="top-nav">
+        <a class="nav-link active" href="/dashboard.html">대시보드</a>
+        <a class="nav-link" href="/register.html">환자 등록</a>
+        <a class="nav-link" href="/index.html">처방 발행</a>
+        <a class="nav-link" href="/prescriptions.html">처방 이력</a>
+    </div>
+</div>
+
+<div class="page">
+    <div class="page-title">대시보드</div>
+    <div class="page-sub" id="last-updated">데이터를 불러오는 중...</div>
+
+    <!-- KPI 카드 -->
+    <div class="kpi-grid">
+        <div class="kpi-card" style="--accent:#1D9E75;--icon-bg:#E1F5EE">
+            <div class="kpi-label">총 등록 환자</div>
+            <div class="kpi-value" id="kpi-patients">-</div>
+            <div class="kpi-sub">명</div>
+            <div class="kpi-icon">👥</div>
+        </div>
+        <div class="kpi-card" style="--accent:#378ADD;--icon-bg:#E6F1FB">
+            <div class="kpi-label">총 처방 발행</div>
+            <div class="kpi-value" id="kpi-prescriptions">-</div>
+            <div class="kpi-sub">건</div>
+            <div class="kpi-icon">📋</div>
+        </div>
+        <div class="kpi-card" style="--accent:#EF9F27;--icon-bg:#FAEEDA">
+            <div class="kpi-label">이번 달 처방</div>
+            <div class="kpi-value" id="kpi-monthly">-</div>
+            <div class="kpi-sub">건</div>
+            <div class="kpi-icon">📅</div>
+        </div>
+        <div class="kpi-card" style="--accent:#E24B4A;--icon-bg:#FCEBEB">
+            <div class="kpi-label">처방 완료율</div>
+            <div class="kpi-value" id="kpi-rate">-</div>
+            <div class="kpi-sub">% (취소 제외)</div>
+            <div class="kpi-icon">✅</div>
+        </div>
+    </div>
+
+    <!-- 차트 -->
+    <div class="chart-grid">
+        <div class="chart-card">
+            <div class="chart-title">프로그램별 처방 현황</div>
+            <div class="chart-sub">관광 프로그램 유형별 처방 발행 건수</div>
+            <div class="chart-wrap"><canvas id="program-chart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">처방 상태 현황</div>
+            <div class="chart-sub">발행 / 취소 / 임시저장 비율</div>
+            <div class="chart-wrap"><canvas id="status-chart"></canvas></div>
+        </div>
+        <div class="chart-card full">
+            <div class="chart-title">지역별 처방 현황</div>
+            <div class="chart-sub">환자 거주 지역별 처방 발행 건수</div>
+            <div class="chart-wrap" style="height:180px"><canvas id="area-chart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- 최근 처방 -->
+    <div class="recent-card">
+        <div class="section-head">
+            <div class="section-title">최근 처방 목록</div>
+            <a class="section-link" href="/prescriptions.html">전체 보기 →</a>
+        </div>
+        <div class="rx-row rx-head">
+            <div>처방번호</div>
+            <div>환자명</div>
+            <div>프로그램</div>
+            <div>관광지</div>
+            <div>발행일</div>
+            <div>상태</div>
+        </div>
+        <div id="recent-list"><div class="loading">데이터를 불러오는 중...</div></div>
+    </div>
+</div>
+
+<script>
+    var programChart, statusChart, areaChart;
+
+    var AREA_MAP = {
+        "1":"서울","2":"인천","3":"대전","4":"대구","5":"광주",
+        "6":"부산","7":"울산","31":"경기","32":"강원","33":"충북",
+        "34":"충남","35":"경북","36":"경남","37":"전북","38":"전남","39":"제주"
+    };
+
+    async function loadDashboard() {
+        try {
+            var [rxRes, ptRes] = await Promise.all([
+                fetch('/api/prescription/list'),
+                fetch('/api/patient/list')
+            ]);
+            var rxData = await rxRes.json();
+            var ptData = await ptRes.json();
+
+            var prescriptions = rxData.success ? (rxData.prescriptions || []) : [];
+            var patients = ptData.success ? (ptData.patients || []) : [];
+
+            var now = new Date();
+            var thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+
+            var monthly = prescriptions.filter(function(rx) {
+                return rx.issuedAt && rx.issuedAt.startsWith(thisMonth);
+            }).length;
+
+            var issued = prescriptions.filter(function(rx){ return rx.status === 'ISSUED'; }).length;
+            var rate = prescriptions.length > 0 ? Math.round(issued / prescriptions.length * 100) : 0;
+
+            document.getElementById('kpi-patients').textContent = patients.length;
+            document.getElementById('kpi-prescriptions').textContent = prescriptions.length;
+            document.getElementById('kpi-monthly').textContent = monthly;
+            document.getElementById('kpi-rate').textContent = rate;
+            document.getElementById('last-updated').textContent =
+                '마지막 업데이트: ' + now.toLocaleString('ko-KR');
+
+            renderProgramChart(prescriptions);
+            renderStatusChart(prescriptions);
+            renderAreaChart(patients);
+            renderRecentList(prescriptions);
+
+        } catch(e) {
+            document.getElementById('last-updated').textContent = '데이터 로드 실패';
+        }
+    }
+
+    function renderProgramChart(data) {
+        var counts = {};
+        data.forEach(function(rx) {
+            var prog = rx.programType || '기타';
+            var short = prog.replace(' 여행','').replace(' 탐방','').replace(' 관광','');
+            counts[short] = (counts[short] || 0) + 1;
+        });
+
+        var labels = Object.keys(counts);
+        var values = Object.values(counts);
+        var colors = ['#1D9E75','#378ADD','#EF9F27','#E24B4A','#9B59B6','#1ABC9C'];
+
+        if (programChart) programChart.destroy();
+        programChart = new Chart(document.getElementById('program-chart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderRadius: 6, borderSkipped: false }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#EEF1F5' } },
+                    x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderStatusChart(data) {
+        var issued = data.filter(function(rx){ return rx.status === 'ISSUED'; }).length;
+        var cancelled = data.filter(function(rx){ return rx.status === 'CANCELLED'; }).length;
+        var draft = data.filter(function(rx){ return rx.status === 'DRAFT'; }).length;
+
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(document.getElementById('status-chart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['발행', '취소', '임시저장'],
+                datasets: [{ data: [issued, cancelled, draft], backgroundColor: ['#1D9E75','#E24B4A','#EF9F27'], borderWidth: 0 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 16 } }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    function renderAreaChart(patients) {
+        var counts = {};
+        patients.forEach(function(p) {
+            var area = AREA_MAP[p.areaCode] || p.areaName || '기타';
+            counts[area] = (counts[area] || 0) + 1;
+        });
+
+        var sorted = Object.entries(counts).sort(function(a,b){ return b[1]-a[1]; });
+        var labels = sorted.map(function(e){ return e[0]; });
+        var values = sorted.map(function(e){ return e[1]; });
+
+        if (areaChart) areaChart.destroy();
+        areaChart = new Chart(document.getElementById('area-chart'), {
+            type: 'bar',
+            data: {
+                labels: labels.length ? labels : ['데이터 없음'],
+                datasets: [{
+                    data: values.length ? values : [0],
+                    backgroundColor: '#1D9E75',
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#EEF1F5' } },
+                    y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderRecentList(data) {
+        var recent = data.slice(0, 5);
+        var el = document.getElementById('recent-list');
+
+        if (!recent.length) {
+            el.innerHTML = '<div class="loading">처방 데이터가 없습니다.</div>';
+            return;
+        }
+
+        el.innerHTML = recent.map(function(rx) {
+            var date = rx.issuedAt ? rx.issuedAt.substring(0,10) : '-';
+            var prog = rx.programType ? rx.programType.replace(' 여행','').replace(' 탐방','').replace(' 관광','') : '-';
+            var badge = rx.status === 'ISSUED'
+                ? '<span class="rx-badge badge-issued">발행</span>'
+                : '<span class="rx-badge badge-cancelled">취소</span>';
+            return '<div class="rx-row">' +
+                '<div class="rx-mono">' + (rx.rxNo || '-') + '</div>' +
+                '<div class="rx-teal">' + (rx.patientName || '-') + '</div>' +
+                '<div><span class="prog-pill">' + prog + '</span></div>' +
+                '<div class="rx-gray">' + (rx.tourPlaceName || '-') + '</div>' +
+                '<div class="rx-gray">' + date + '</div>' +
+                '<div>' + badge + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    loadDashboard();
+</script>
+</body>
+</html>
